@@ -11,7 +11,7 @@
             var mytable = document.getElementById("mytable");
             fileReader.onload = function (fileLoadedEvent) {
                 var fileString = fileLoadedEvent.target.result;
-                var items = fileString.split('\r\n\r\n');
+                var items = fileString.split('\n\n');
                 alert(items.length);
                 for (var i = items.length - 1; i >= 0; i--) {
                     var item = items[i];
@@ -19,30 +19,67 @@
                     var cell0 = newRow.insertCell(0);
                     cell0.innerHTML = "<input type='checkbox' id='row_" + i + "'  name='r' style='width:50px'/>";
                     var cell1 = newRow.insertCell(1);
-                    cell1.innerText = i.toString() + "\t" + item;
+                    splts = item.split('\n')
+                    var shortItem = ""
+                    var lastPrefix = ""
+                    for (var m of splts) {
+                        //alert(m)
+                        if (m.length > 3) {
+                            prefix = m.substring(0, 2)
+                            suffix = m.substring(3, m.length)
+                            if (prefix != lastPrefix) {
+                                if (prefix.trim() != "") {
+                                    if (prefix == 'AU' || prefix == 'PT' || prefix == 'TI' || prefix == 'SO' || prefix == 'PY' || prefix == 'AB') {
+                                        shortItem += ("\n" + suffix + " ")
+                                    }
+                                    lastPrefix = prefix
+                                } else {
+                                    shortItem += (suffix + " ")
+                                }
+                            }
+                        }
+                    }
+                    cell1.innerText = i.toString() + "\t" + shortItem;
                 }
             };
             fileReader.readAsText(fileToLoad, "UTF-8");
         }
 
         function output() {
-            var mytable = document.getElementById("mytable");
-            var rows = mytable.rows;
-            var arrs = [];
-            var a = document.getElementsByName("r");
-            for (var i = 0; i < a.length; i++) {
-                if (a[i].checked) {
-                    var row_indx = a[i].parentElement.parentElement.rowIndex;
-                    // alert(a[i].value);
-                    let selectedContent = rows[row_indx].cells[1].innerText;
-                    // alert(selectedContent);
-                    arrs.push(selectedContent);
+            var fileToLoad = document.getElementById("upfile").files[0];
+            var fileReader = new FileReader();
+            fileReader.onload = function (fileLoadedEvent) {
+                var fileString = fileLoadedEvent.target.result;
+                var items = fileString.split('\n\n');
+                var mytable = document.getElementById("mytable");
+                var rows = mytable.rows;
+                var arrs = [];
+                var a = document.getElementsByName("r");
+                if (items.length != a.length) {
+                    alert(items.length.toString() + "\t" + a.length.toString())
                 }
+                for (var i = 0; i < a.length; i++) {
+                    if (a[i].checked) {
+                        var row_indx = a[i].parentElement.parentElement.rowIndex;
+                        // alert(a[i].value);
+                        // let selectedContent = rows[row_indx].cells[1].innerText;
+                        let selectedContent = items[row_indx - 1];
+                        // alert(selectedContent);
+                        arrs.push(selectedContent);
+                    }
+                }
+                // alert(arrs.length);
+                joinedArray = arrs.join("\n\n")
+                var result = ""
+                if (joinedArray.startsWith("FN Clarivate Analytics Web of Science")) {
+                    result = joinedArray + "\n\nEF\n";
+                } else {
+                    result = "FN Clarivate Analytics Web of Science\nVR 1.0\n" + joinedArray + "\n\nEF\n";
+                }
+                // alert(result);
+                mkfile(result, 'selected_items.txt')
             }
-            // alert(arrs.length);
-            result = arrs.join("\r\n\r\n");
-            // alert(result);
-            mkfile(result, 'selected_items.txt')
+            fileReader.readAsText(fileToLoad, "UTF-8");
         }
 
         function mkfile(content, name) {
@@ -57,14 +94,14 @@
 <body>
 <div class="File">添加附件</div>
 <input id="upfile" name="upfile" type="file" multiple="multiple"/>
-<button type="submit" name="btn" value="提交" id="submit" onclick="load()">提交</button>
-<button type="submit" name="btn" value="导出" id="output_0" onclick="output()">导出</button>
+<button type="submit" name="btn" value="提交" id="btnId" onclick="load()">提交</button>
+<button type="submit" name="btn" value="导出" id="btnId" onclick="output()">导出</button>
 <table id="mytable" border="1px" width="100%" height="30%">
     <tr>
         <td>选择</td>
         <td>题录</td>
     </tr>
 </table>
-<button type="submit" name="btn" value="导出" id="output_1" onclick="output()">导出</button>
+<button type="submit" name="btn" value="导出" id="btnId" onclick="output()">导出</button>
 </body>
 </html>
